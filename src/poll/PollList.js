@@ -69,7 +69,6 @@ export const PollList = withRouter((props) => {
 
         const loadPollList = (page = 0, size = POLL_LIST_SIZE) => {
             const promise = setPollPromise(props, page, size);
-            const {polls, currentVotes} = pollState;
        
             if(!promise) {
                 return;
@@ -83,8 +82,9 @@ export const PollList = withRouter((props) => {
                     if (unmounted) {
                         return;
                     }
-                    const pollsResponse = setPollsFromResponse(response, polls, currentVotes);
-                    setPollState(state => ({...state, ...pollsResponse}));
+                    setPollState(state => ({...state, 
+                        ...setPollsFromResponse(response, state.polls, state.currentVotes)
+                    }));
                 }).catch(error => {
                     setPollState(state => ({...state, isLoading: false }))
                 });  
@@ -95,7 +95,7 @@ export const PollList = withRouter((props) => {
         }
         
         return () => { unmounted = true };
-    }, [props.isAuthenticated]);
+    }, [props]);
 
 
     const handleLoadMore = () => {
@@ -171,7 +171,7 @@ export const PollList = withRouter((props) => {
         <div className="polls-container">
             { pollState.polls.map((poll, pollIndex) => 
                 <Poll 
-                    key={poll.id} 
+                    key={pollIndex} 
                     poll={poll}
                     currentVote={pollState.currentVotes[pollIndex]} 
                     handleVoteChange={(event) => handleVoteChange(event, pollIndex)}

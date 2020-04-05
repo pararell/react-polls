@@ -28,7 +28,7 @@ class App extends Component {
     this.state = {
       currentUser: null,
       isAuthenticated: false,
-      isLoading: false
+      isLoading: true
     }
     this.handleLogout = this.handleLogout.bind(this);
     this.loadCurrentUser = this.loadCurrentUser.bind(this);
@@ -42,9 +42,6 @@ class App extends Component {
   }
 
   loadCurrentUser() {
-    this.setState({
-      isLoading: true
-    });
     getCurrentUser()
     .then(response => {
       this.setState({
@@ -102,16 +99,28 @@ class App extends Component {
             <div className="container">
               <Switch>      
                 <Route exact path="/" 
-                  render={(props) => <PollList isAuthenticated={this.state.isAuthenticated} 
-                      currentUser={this.state.currentUser} handleLogout={this.handleLogout} {...props} />}>
+                  render={(props) => 
+                    <PollList 
+                      isAuthenticated={this.state.isAuthenticated} 
+                      currentUser={this.state.currentUser} 
+
+                      handleLogout={this.handleLogout} {...props} />}>
                 </Route>
                 <Route path="/login" 
                   render={(props) => <Login onLogin={this.handleLogin} {...props} />}></Route>
                 <Route path="/signup" component={Signup}></Route>
                 <Route path="/users/:username" 
-                  render={(props) => <Profile isAuthenticated={this.state.isAuthenticated} currentUser={this.state.currentUser} {...props}  />}>
+                  render={(props) => 
+                    <Profile 
+                      isAuthenticated={this.state.isAuthenticated} 
+                      currentUser={this.state.currentUser} 
+                      {...props}  />}>
                 </Route>
-                <PrivateRoute authenticated={this.state.isAuthenticated} path="/poll/new" component={NewPoll} handleLogout={this.handleLogout}></PrivateRoute>
+                <PrivateRoute 
+                  authenticated={this.state.isAuthenticated} 
+                  path="/poll/new" 
+                  component={NewPoll} 
+                  handleLogout={this.handleLogout}></PrivateRoute>
                 <Route component={NotFound}></Route>
               </Switch>
             </div>
