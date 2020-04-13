@@ -103,7 +103,6 @@ class App extends Component {
                     <PollList 
                       isAuthenticated={this.state.isAuthenticated} 
                       currentUser={this.state.currentUser} 
-
                       handleLogout={this.handleLogout} {...props} />}>
                 </Route>
                 <Route path="/login" 

@@ -117,6 +117,12 @@ export default function Poll(props) {
                         props.poll.expired ? "Final results" : getTimeRemaining(props.poll)
                     }
                 </span>
+                {props.remove ?
+                <div style={{"textAlign": "right", "cursor":"pointer"}} onClick={props.handleRemovePoll}>
+                    x
+                </div>
+                : null
+                }
             </div>
         </div>
     );

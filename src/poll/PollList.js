@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { getAllPolls, getUserCreatedPolls, getUserVotedPolls } from '../util/APIUtils';
 import Poll from './Poll';
-import { castVote } from '../util/APIUtils';
+import { castVote, deletePoll } from '../util/APIUtils';
 import LoadingIndicator  from '../common/LoadingIndicator';
 import { Button, notification } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
@@ -52,6 +52,29 @@ export const PollList = withRouter((props) => {
         isLoading: false
     });
 
+    const loadPollList = useCallback((unmounted, page = 0, size = POLL_LIST_SIZE) => {
+        const promise = setPollPromise(props, page, size);
+   
+        if(!promise) {
+            return;
+        }
+
+        setPollState(state => ({...state, isLoading: true }));
+
+        promise            
+            .then(response => {
+
+                if (unmounted) {
+                    return;
+                }
+                setPollState(state => ({...state, 
+                    ...setPollsFromResponse(response, state.polls, state.currentVotes)
+                }));
+            }).catch(error => {
+                setPollState(state => ({...state, isLoading: false }))
+            });  
+    },[props]);
+
 
     useEffect(() => {
         let unmounted = false;
@@ -67,57 +90,18 @@ export const PollList = withRouter((props) => {
             isLoading: false
         })); 
 
-        const loadPollList = (page = 0, size = POLL_LIST_SIZE) => {
-            const promise = setPollPromise(props, page, size);
-       
-            if(!promise) {
-                return;
-            }
-    
-            setPollState(state => ({...state, isLoading: true }));
-    
-            promise            
-                .then(response => {
-
-                    if (unmounted) {
-                        return;
-                    }
-                    setPollState(state => ({...state, 
-                        ...setPollsFromResponse(response, state.polls, state.currentVotes)
-                    }));
-                }).catch(error => {
-                    setPollState(state => ({...state, isLoading: false }))
-                });  
-        };
-
         if (!unmounted) {
-            loadPollList();
+            loadPollList(unmounted);
         }
         
         return () => { unmounted = true };
-    }, [props]);
+    }, [loadPollList]);
 
 
     const handleLoadMore = () => {
         const page = pollState.page + 1;
         const size = POLL_LIST_SIZE;
-        const promise = setPollPromise(props, page, size);
-        const {polls, currentVotes} = pollState;
-   
-        if(!promise) {
-            return;
-        }
-
-        setPollState(state => ({...state, isLoading: true }));
-
-        promise            
-            .then(response => {
-                const pollsResponse = setPollsFromResponse(response, polls, currentVotes);
-                setPollState(state => ({...state, ...pollsResponse}));
-            }).catch(error => {
-                setPollState(state => ({...state, isLoading: false }))
-            });  
-
+        loadPollList(false,page,size);
     }
 
     const handleVoteChange = (event, pollIndex) => {
@@ -167,15 +151,37 @@ export const PollList = withRouter((props) => {
             });
     }
 
+
+    const handleRemovePoll = (event, index) => {
+        console.log(props, 'rs')
+        event.preventDefault();
+        if(!props.isAuthenticated) {
+            props.history.push("/login");
+            return;
+        }
+        const poll = pollState.polls[index];
+
+        deletePoll(poll.id)
+            .then(res => {
+                setPollState(state => ({...state,
+                    polls: state.polls.filter(statePoll => statePoll.id !== poll.id)
+                })); 
+            }, e => {
+                console.log(e, 'error')
+            })
+    }
+
     return (
         <div className="polls-container">
             { pollState.polls.map((poll, pollIndex) => 
                 <Poll 
                     key={pollIndex} 
                     poll={poll}
-                    currentVote={pollState.currentVotes[pollIndex]} 
+                    currentVote={pollState.currentVotes[pollIndex]}
+                    remove={props.remove}
                     handleVoteChange={(event) => handleVoteChange(event, pollIndex)}
-                    handleVoteSubmit={(event) => handleVoteSubmit(event, pollIndex)} />     
+                    handleVoteSubmit={(event) => handleVoteSubmit(event, pollIndex)} 
+                    handleRemovePoll={event => handleRemovePoll(event, pollIndex)}/>     
             )}
             {
                 !pollState.isLoading && pollState.polls.length === 0 ? (

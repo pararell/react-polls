@@ -14,7 +14,6 @@ const TabPane = Tabs.TabPane;
 export const Profile = (props) => {
     const [userState, setUserState] = useState({user: null, isLoading: false});
 
-
     useEffect(() => {
         let unmounted = false;
         function loadUserProfile(username) {
@@ -44,8 +43,11 @@ export const Profile = (props) => {
             });   
         }
         loadUserProfile(props.match.params.username);
+
     return () => { unmounted = true };
+
     }, [props.match.params.username]);
+
       
     if(userState.isLoading) {
         return <LoadingIndicator />;
@@ -89,10 +91,16 @@ export const Profile = (props) => {
                                 size="large"
                                 className="profile-tabs">
                                 <TabPane tab={`${userState.user.pollCount} Polls`} key="1">
-                                    <PollList username={props.match.params.username} type="USER_CREATED_POLLS" />
+                                    <PollList 
+                                        username={props.match.params.username}
+                                        isAuthenticated={props.isAuthenticated} 
+                                        remove={props.match.params.username === props.currentUser.username}
+                                        type="USER_CREATED_POLLS" />
                                 </TabPane>
                                 <TabPane tab={`${userState.user.voteCount} Votes`}  key="2">
-                                    <PollList username={props.match.params.username} type="USER_VOTED_POLLS" />
+                                    <PollList 
+                                        username={props.match.params.username}
+                                        type="USER_VOTED_POLLS" />
                                 </TabPane>
                             </Tabs>
                         </div>  
